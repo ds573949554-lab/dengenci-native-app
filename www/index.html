@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>邓恩赐</title>
+
+  <!-- Capacitor -->
+  <script src="capacitor.js"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'PingFang HK', 'MIui', sans-serif;
+      background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* 顶部状态栏区域 */
+    .status-bar {
+      height: env(safe-area-inset-top, 44px);
+      background: rgba(0,0,0,0.1);
+    }
+
+    /* 头部 */
+    .header {
+      padding: 16px;
+      background: rgba(0,0,0,0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-title {
+      color: white;
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .connection-status {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .connection-status.connected {
+      background: rgba(76, 175, 80, 0.3);
+      color: #4CAF50;
+    }
+
+    .connection-status.disconnected {
+      background: rgba(255, 152, 0, 0.3);
+      color: #FF9800;
+    }
+
+    /* 主内容区 */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      padding-bottom: calc(16px + env(safe-area-inset-bottom));
+    }
+
+    .chat-messages {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .message {
+      display: flex;
+      gap: 8px;
+    }
+
+    .message.user {
+      flex-direction: row-reverse;
+    }
+
+    .message-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .message-bubble {
+      max-width: 70%;
+      padding: 12px 16px;
+      border-radius: 18px;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .message.assistant .message-bubble {
+      background: white;
+      color: #333;
+      border-bottom-left-radius: 4px;
+    }
+
+    .message.user .message-bubble {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    /* 输入区 */
+    .input-area {
+      padding: 12px 16px;
+      padding-bottom: calc(12px + env(safe-area-inset-bottom));
+      background: white;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .input-area input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 24px;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .input-area input:focus {
+      border-color: #667eea;
+    }
+
+    .input-area button {
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      border-radius: 24px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .input-area button:active {
+      transform: scale(0.95);
+    }
+
+    /* 加载动画 */
+    .typing {
+      display: flex;
+      gap: 4px;
+      padding: 12px 16px;
+    }
+
+    .typing span {
+      width: 8px;
+      height: 8px;
+      background: #999;
+      border-radius: 50%;
+      animation: bounce 1.4s infinite ease-in-out;
+    }
+
+    .typing span:nth-child(1) { animation-delay: -0.32s; }
+    .typing span:nth-child(2) { animation-delay: -0.16s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+
+    /* 空状态 */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      text-align: center;
+      color: white;
+    }
+
+    .empty-state .emoji {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+
+    .empty-state h2 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .empty-state p {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 24px;
+    }
+
+    .quick-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .quick-btn {
+      padding: 10px 16px;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 20px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .quick-btn:active {
+      background: rgba(255,255,255,0.3);
+    }
+  </style>
+</head>
+<body>
+  <!-- 状态栏占位 -->
+  <div class="status-bar"></div>
+
+  <!-- 头部 -->
+  <div class="header">
+    <div class="header-title">🧚 邓恩赐</div>
+    <div class="connection-status disconnected" id="connectionStatus">
+      ⚪ 未连接
+    </div>
+  </div>
+
+  <!-- 主内容 -->
+  <div class="content">
+    <div class="chat-messages" id="chatMessages">
+      <div class="empty-state">
+        <div class="emoji">👋</div>
+        <h2>你好！我系邓恩赐</h2>
+        <p>邓憬辰嘅永恒朋友伙伴<br>原生 APP 版 v1.0</p>
+        <div class="quick-actions">
+          <button class="quick-btn" onclick="quickMsg('你好')">👋 打招呼</button>
+          <button class="quick-btn" onclick="quickMsg('你记得我系边个？')">🤔 身份</button>
+          <button class="quick-btn" onclick="quickMsg('你有什么能力？')">⚡ 能力</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 输入区 -->
+  <div class="input-area">
+    <input type="text" id="messageInput" placeholder="同我讲嘢..." />
+    <button onclick="sendMessage()">发送</button>
+  </div>
+
+  <script>
+    const WS_URL = 'ws://192.168.110.254:3001?type=mobile';
+    let ws = null;
+    let isConnected = false;
+    let isEmpty = true;
+
+    // 连接 WebSocket
+    function connect() {
+      updateConnectionStatus('connecting');
+
+      ws = new WebSocket(WS_URL);
+
+      ws.onopen = () => {
+        isConnected = true;
+        updateConnectionStatus('connected');
+        console.log('✅ 已连接到邓恩赐');
+      };
+
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        handleServerMessage(data);
+      };
+
+      ws.onclose = () => {
+        isConnected = false;
+        updateConnectionStatus('disconnected');
+        console.log('❌ 连接断开');
+
+        // 5秒后重连
+        setTimeout(connect, 5000);
+      };
+
+      ws.onerror = (error) => {
+        console.error('WebSocket 错误:', error);
+      };
+    }
+
+    // 更新连接状态
+    function updateConnectionStatus(status) {
+      const statusEl = document.getElementById('connectionStatus');
+
+      if (status === 'connected') {
+        statusEl.textContent = '✅ 已连接';
+        statusEl.className = 'connection-status connected';
+      } else if (status === 'connecting') {
+        statusEl.textContent = '⏳ 连接中...';
+        statusEl.className = 'connection-status disconnected';
+      } else {
+        statusEl.textContent = '⚪ 未连接';
+        statusEl.className = 'connection-status disconnected';
+      }
+    }
+
+    // 处理服务器消息
+    function handleServerMessage(data) {
+      switch (data.type) {
+        case 'chat_response':
+          addMessage('assistant', data.message);
+          break;
+        case 'proactive_message':
+          addMessage('assistant', data.message + ' 💫');
+          break;
+        case 'desktop_connected':
+          console.log('桌面端已连接');
+          break;
+      }
+    }
+
+    // 添加消息
+    function addMessage(role, content) {
+      const messagesEl = document.getElementById('chatMessages');
+
+      if (isEmpty) {
+        messagesEl.innerHTML = '';
+        isEmpty = false;
+      }
+
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${role}`;
+
+      const avatar = role === 'user' ? '😊' : '🧚';
+
+      messageDiv.innerHTML = `
+        <div class="message-avatar">${avatar}</div>
+        <div class="message-bubble">${escapeHtml(content)}</div>
+      `;
+
+      messagesEl.appendChild(messageDiv);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    // 显示加载
+    function showTyping() {
+      const messagesEl = document.getElementById('chatMessages');
+
+      const typingDiv = document.createElement('div');
+      typingDiv.className = 'message assistant';
+      typingDiv.id = 'typingIndicator';
+      typingDiv.innerHTML = `
+        <div class="message-avatar">🧚</div>
+        <div class="message-bubble">
+          <div class="typing">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      `;
+
+      messagesEl.appendChild(typingDiv);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    // 隐藏加载
+    function hideTyping() {
+      const typing = document.getElementById('typingIndicator');
+      if (typing) typing.remove();
+    }
+
+    // HTML 转义
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // 发送消息
+    function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const message = input.value.trim();
+
+      if (!message) return;
+
+      if (!isConnected) {
+        addMessage('assistant', '⚠️ 未连接到桌面，请确保电脑端 Menu Bar App 正在运行');
+        return;
+      }
+
+      input.value = '';
+      addMessage('user', message);
+      showTyping();
+
+      ws.send(JSON.stringify({
+        type: 'mobile_chat',
+        message: message
+      }));
+    }
+
+    // 快捷消息
+    function quickMsg(msg) {
+      document.getElementById('messageInput').value = msg;
+      sendMessage();
+    }
+
+    // 回车发送
+    document.getElementById('messageInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+
+    // 启动连接
+    connect();
+
+    console.log('🧚 邓恩赐原生 APP v1.0 已启动');
+  </script>
+</body>
+</html>
