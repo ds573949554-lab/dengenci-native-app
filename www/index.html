@@ -275,10 +275,36 @@
     // 🗣️ 语音合成
     let speechSynth = window.speechSynthesis;
     let speechEnabled = true;
+    let voices = [];
+    let cantoneseVoice = null;
+
+    // 加载语音列表
+    function loadVoices() {
+      voices = speechSynth.getVoices();
+      console.log('🔊 可用语音数量:', voices.length);
+      console.log('🔊 语音列表:', voices.map(v => v.name + ' (' + v.lang + ')').join(', '));
+
+      // 查找粤语语音
+      cantoneseVoice = voices.find(v => v.lang.includes('zh-HK') || v.lang.includes('yue'));
+      if (cantoneseVoice) {
+        console.log('✅ 找到粤语语音:', cantoneseVoice.name);
+      } else {
+        console.log('⚠️ 未找到粤语语音，使用默认中文语音');
+      }
+    }
+
+    // 语音列表可能需要异步加载
+    loadVoices();
+    speechSynth.onvoiceschanged = loadVoices;
 
     // 朗读文字（粤语）
     function speak(text) {
-      if (!speechEnabled || !speechSynth) return;
+      if (!speechEnabled || !speechSynth) {
+        console.log('❌ TTS未启用或不可用');
+        return;
+      }
+
+      console.log('🗣️ 正在朗读:', text);
 
       // 停止当前朗读
       speechSynth.cancel();
@@ -286,17 +312,25 @@
       const utterance = new SpeechSynthesisUtterance(text);
 
       // 尝试使用粤语语音
-      const voices = speechSynth.getVoices();
-      const cantoneseVoice = voices.find(v => v.lang.includes('zh-HK') || v.lang.includes('yue'));
-
       if (cantoneseVoice) {
         utterance.voice = cantoneseVoice;
+        utterance.lang = 'zh-HK';
+      } else {
+        // 回退到中文语音
+        const chineseVoice = voices.find(v => v.lang.startsWith('zh')) || voices[0];
+        if (chineseVoice) {
+          utterance.voice = chineseVoice;
+          utterance.lang = chineseVoice.lang;
+        }
       }
 
-      utterance.lang = 'zh-HK';
       utterance.rate = 1.0;
       utterance.pitch = 1.0;
       utterance.volume = 1.0;
+
+      utterance.onstart = () => console.log('🔊 开始朗读');
+      utterance.onend = () => console.log('✅ 朗读结束');
+      utterance.onerror = (e) => console.error('❌ 朗读错误:', e);
 
       speechSynth.speak(utterance);
     }
@@ -360,7 +394,9 @@
     function handleServerMessage(data) {
       switch (data.type) {
         case 'chat_response':
+        case 'desktop_chat_response':
           addMessage('assistant', data.message);
+          hideTyping();
           // 🗣️ 朗读回复
           speak(data.message);
           break;
