@@ -239,6 +239,9 @@
     <div class="connection-status disconnected" id="connectionStatus">
       ⚪ 未连接
     </div>
+    <!-- 🔍 调试信息 -->
+    <div id="debugPanel" style="font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 4px; word-break: break-all;">
+    </div>
   </div>
 
   <!-- 主内容 -->
@@ -302,6 +305,9 @@
     function connect() {
       updateConnectionStatus('connecting');
 
+      // 🔍 调试信息
+      console.log('🔍 尝试连接:', WS_URL);
+
       ws = new WebSocket(WS_URL);
 
       ws.onopen = () => {
@@ -315,10 +321,10 @@
         handleServerMessage(data);
       };
 
-      ws.onclose = () => {
+      ws.onclose = (event) => {
         isConnected = false;
         updateConnectionStatus('disconnected');
-        console.log('❌ 连接断开');
+        console.log('❌ 连接断开, code:', event.code, 'reason:', event.reason);
 
         // 5秒后重连
         setTimeout(connect, 5000);
@@ -326,21 +332,26 @@
 
       ws.onerror = (error) => {
         console.error('WebSocket 错误:', error);
+        console.error('URL:', WS_URL);
       };
     }
 
     // 更新连接状态
     function updateConnectionStatus(status) {
       const statusEl = document.getElementById('connectionStatus');
+      const debugEl = document.getElementById('debugPanel');
 
       if (status === 'connected') {
         statusEl.textContent = '✅ 已连接';
         statusEl.className = 'connection-status connected';
+        debugEl.innerHTML = `🔗 ${WS_URL}`;
       } else if (status === 'connecting') {
         statusEl.textContent = '⏳ 连接中...';
         statusEl.className = 'connection-status disconnected';
+        debugEl.innerHTML = `🔍 正在连接: ${WS_URL}`;
       } else {
         statusEl.textContent = '⚪ 未连接';
+        debugEl.innerHTML = `⚠️ ${WS_URL}`;
         statusEl.className = 'connection-status disconnected';
       }
     }
