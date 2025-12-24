@@ -269,6 +269,35 @@
     let isConnected = false;
     let isEmpty = true;
 
+    // 🗣️ 语音合成
+    let speechSynth = window.speechSynthesis;
+    let speechEnabled = true;
+
+    // 朗读文字（粤语）
+    function speak(text) {
+      if (!speechEnabled || !speechSynth) return;
+
+      // 停止当前朗读
+      speechSynth.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(text);
+
+      // 尝试使用粤语语音
+      const voices = speechSynth.getVoices();
+      const cantoneseVoice = voices.find(v => v.lang.includes('zh-HK') || v.lang.includes('yue'));
+
+      if (cantoneseVoice) {
+        utterance.voice = cantoneseVoice;
+      }
+
+      utterance.lang = 'zh-HK';
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+
+      speechSynth.speak(utterance);
+    }
+
     // 连接 WebSocket
     function connect() {
       updateConnectionStatus('connecting');
@@ -321,9 +350,13 @@
       switch (data.type) {
         case 'chat_response':
           addMessage('assistant', data.message);
+          // 🗣️ 朗读回复
+          speak(data.message);
           break;
         case 'proactive_message':
           addMessage('assistant', data.message + ' 💫');
+          // 🗣️ 朗读主动消息
+          speak(data.message);
           break;
         case 'desktop_connected':
           console.log('桌面端已连接');
