@@ -268,9 +268,14 @@
 
   <script>
     const WS_URL = 'ws://192.168.110.254:3001?type=mobile';
+    const API_URL = 'http://192.168.110.254:3001';
     let ws = null;
     let isConnected = false;
     let isEmpty = true;
+    let usePolling = false; // 备用轮询模式
+    let pollTimer = null;
+    let wsConnectAttempts = 0;
+    const MAX_WS_ATTEMPTS = 3; // WebSocket 尝试次数
 
     // 🗣️ 语音合成
     let speechSynth = window.speechSynthesis;
@@ -337,6 +342,12 @@
 
     // 连接 WebSocket
     function connect() {
+      if (usePolling) {
+        console.log('🔄 使用轮询模式');
+        startPolling();
+        return;
+      }
+
       updateConnectionStatus('connecting');
 
       // 🔍 调试信息
@@ -346,6 +357,7 @@
 
       ws.onopen = () => {
         isConnected = true;
+        wsConnectAttempts = 0; // 重置尝试次数
         updateConnectionStatus('connected');
         console.log('✅ 已连接到邓恩赐');
       };
@@ -360,14 +372,85 @@
         updateConnectionStatus('disconnected');
         console.log('❌ 连接断开, code:', event.code, 'reason:', event.reason);
 
-        // 5秒后重连
-        setTimeout(connect, 5000);
+        wsConnectAttempts++;
+
+        // 如果尝试次数过多，切换到轮询模式
+        if (wsConnectAttempts >= MAX_WS_ATTEMPTS) {
+          console.log('⚠️ WebSocket 连接失败 ' + MAX_WS_ATTEMPTS + ' 次，切换到轮询模式');
+          usePolling = true;
+          startPolling();
+        } else {
+          // 5秒后重连
+          setTimeout(connect, 5000);
+        }
       };
 
       ws.onerror = (error) => {
         console.error('WebSocket 错误:', error);
         console.error('URL:', WS_URL);
       };
+    }
+
+    // 🔄 HTTP 轮询模式
+    function startPolling() {
+      usePolling = true;
+      isConnected = true;
+      updateConnectionStatus('connected');
+
+      const debugEl = document.getElementById('debugPanel');
+      debugEl.innerHTML = `🔄 轮询模式 (HTTP)`;
+
+      console.log('🔄 启动 HTTP 轮询模式');
+
+      // 开始轮询
+      pollForMessages();
+    }
+
+    // 轮询新消息
+    async function pollForMessages() {
+      if (!usePolling) return;
+
+      try {
+        const response = await fetch(API_URL + '/poll');
+        const data = await response.json();
+
+        if (data.messages && data.messages.length > 0) {
+          console.log('📨 收到 ' + data.messages.length + ' 条消息');
+          data.messages.forEach(msg => handleServerMessage(msg));
+        }
+      } catch (error) {
+        console.error('❌ 轮询失败:', error);
+      }
+
+      // 2秒后再次轮询
+      pollTimer = setTimeout(pollForMessages, 2000);
+    }
+
+    // 通过 HTTP 发送消息
+    async function sendMessageViaHttp(message) {
+      try {
+        hideTyping();
+        addMessage('user', message);
+        showTyping();
+
+        const response = await fetch(API_URL + '/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message })
+        });
+
+        if (response.ok) {
+          console.log('✅ 消息已发送');
+        } else {
+          console.error('❌ 发送失败:', response.status);
+          addMessage('assistant', '⚠️ 发送失败，请重试');
+          hideTyping();
+        }
+      } catch (error) {
+        console.error('❌ 发送错误:', error);
+        addMessage('assistant', '⚠️ 网络错误，请检查连接');
+        hideTyping();
+      }
     }
 
     // 更新连接状态
@@ -481,14 +564,21 @@
         return;
       }
 
-      input.value = '';
-      addMessage('user', message);
-      showTyping();
+      // 根据模式选择发送方式
+      if (usePolling) {
+        // HTTP 轮询模式
+        sendMessageViaHttp(message);
+      } else {
+        // WebSocket 模式
+        input.value = '';
+        addMessage('user', message);
+        showTyping();
 
-      ws.send(JSON.stringify({
-        type: 'mobile_chat',
-        message: message
-      }));
+        ws.send(JSON.stringify({
+          type: 'mobile_chat',
+          message: message
+        }));
+      }
     }
 
     // 快捷消息
