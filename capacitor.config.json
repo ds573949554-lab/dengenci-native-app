@@ -3,12 +3,15 @@
   "appName": "邓恩赐",
   "webDir": "www",
   "server": {
-    "androidScheme": "https",
+    "androidScheme": "http",
     "cleartext": true,
     "allowNavigation": [
       "http://192.168.*:*",
       "https://192.168.*:*",
-      "http://localhost:*"
+      "http://localhost:*",
+      "ws://192.168.*:*",
+      "wss://192.168.*:*",
+      "ws://localhost:*"
     ]
   },
   "android": {
