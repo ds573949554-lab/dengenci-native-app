@@ -40,6 +40,48 @@
       align-items: center;
     }
 
+    .agent-tabs {
+      display: flex;
+      gap: 8px;
+      padding: 8px 16px 12px;
+      background: rgba(0,0,0,0.12);
+    }
+
+    .agent-tab {
+      flex: 1;
+      padding: 8px 10px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.85);
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.2);
+      transition: all 0.2s ease;
+    }
+
+    .agent-tab.active {
+      background: rgba(255,255,255,0.28);
+      color: #fff;
+      border-color: rgba(255,255,255,0.45);
+    }
+
+    .agent-chip {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
     .header-title {
       color: white;
       font-size: 20px;
@@ -244,6 +286,22 @@
     </div>
   </div>
 
+  <!-- Agent Tabs -->
+  <div class="agent-tabs" id="agentTabs">
+    <div class="agent-tab active" data-agent="gemini">
+      <span class="agent-chip">G</span>
+      <span>Deng enci</span>
+    </div>
+    <div class="agent-tab" data-agent="claude">
+      <span class="agent-chip">C</span>
+      <span>Deng enci</span>
+    </div>
+    <div class="agent-tab" data-agent="codex">
+      <span class="agent-chip">X</span>
+      <span>Deng enci</span>
+    </div>
+  </div>
+
   <!-- 主内容 -->
   <div class="content">
     <div class="chat-messages" id="chatMessages">
@@ -267,8 +325,14 @@
   </div>
 
   <script>
-    const WS_URL = 'ws://192.168.110.254:3001?type=mobile';
-    const API_URL = 'http://192.168.110.254:3001';
+    // 📱 自動檢測服務器地址
+    const hostname = window.location.hostname;
+    const serverIp = (hostname === 'localhost' || hostname === '127.0.0.1')
+      ? '192.168.110.252'  // 本地開發時使用固定 IP
+      : hostname;          // 否則使用當前主機名
+
+    const WS_URL = `ws://${serverIp}:3001?type=mobile`;
+    const API_URL = `http://${serverIp}:3001`;
     let ws = null;
     let isConnected = false;
     let isEmpty = true;
@@ -276,6 +340,7 @@
     let pollTimer = null;
     let wsConnectAttempts = 0;
     const MAX_WS_ATTEMPTS = 3; // WebSocket 尝试次数
+    let activeAgentTab = 'gemini';
 
     // 🗣️ 语音合成
     let speechSynth = window.speechSynthesis;
@@ -612,12 +677,34 @@
       sendMessage();
     }
 
+    // Agent Tabs
+    function setActiveAgentTab(agent) {
+      activeAgentTab = agent;
+      const tabs = document.querySelectorAll('.agent-tab');
+      tabs.forEach((tab) => {
+        const isActive = tab.getAttribute('data-agent') === agent;
+        tab.classList.toggle('active', isActive);
+      });
+    }
+
+    function initAgentTabs() {
+      const tabs = document.querySelectorAll('.agent-tab');
+      tabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+          const agent = tab.getAttribute('data-agent') || 'gemini';
+          setActiveAgentTab(agent);
+        });
+      });
+      setActiveAgentTab(activeAgentTab);
+    }
+
     // 回车发送
     document.getElementById('messageInput').addEventListener('keypress', (e) => {
       if (e.key === 'Enter') sendMessage();
     });
 
     // 启动连接
+    initAgentTabs();
     connect();
 
     console.log('🧚 邓恩赐原生 APP v1.0 已启动');

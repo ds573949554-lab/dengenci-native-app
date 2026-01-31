@@ -158,7 +158,7 @@
 
     <div class="input-group">
       <label>服务器地址</label>
-      <input type="text" id="serverUrl" placeholder="ws://192.168.110.254:3001" value="ws://192.168.110.254:3001">
+      <input type="text" id="serverUrl" placeholder="ws://192.168.110.252:3001" value="ws://192.168.110.252:3001">
     </div>
 
     <div class="button-group">
@@ -170,7 +170,7 @@
       <h3>💡 使用说明</h3>
 
       <p><strong>同一 WiFi：</strong><br>
-      使用局域网地址（如 <code>ws://192.168.110.254:3001</code>）</p>
+      使用局域网地址（如 <code>ws://192.168.110.252:3001</code>）</p>
 
       <p style="margin-top: 10px;"><strong>外网访问：</strong><br>
       1. 电脑启动同步服务器（会显示 ngrok 地址）<br>
@@ -184,7 +184,7 @@
 
   <script>
     let ws = null;
-    let serverUrl = localStorage.getItem('dengenci_server_url') || 'ws://192.168.110.254:3001';
+    let serverUrl = localStorage.getItem('dengenci_server_url') || 'ws://192.168.110.252:3001';
     document.getElementById('serverUrl').value = serverUrl;
 
     function updateStatus(type, message) {
@@ -231,7 +231,7 @@
       updateStatus('checking', '🔍 正在搜索服务器...');
 
       const commonUrls = [
-        'ws://192.168.110.254:3001',
+        'ws://192.168.110.252:3001',
         'ws://192.168.1.1:3001',
         'ws://192.168.0.1:3001',
         'ws://10.0.0.1:3001'
