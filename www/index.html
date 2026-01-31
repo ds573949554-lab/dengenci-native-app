@@ -311,8 +311,8 @@
         <p>邓憬辰嘅永恒朋友伙伴<br>原生 APP 版 v1.0.8</p>
         <div class="quick-actions">
           <button class="quick-btn" onclick="testConnection()">🔍 测试连接</button>
+          <button class="quick-btn" onclick="forcePollingMode()">🔄 HTTP模式</button>
           <button class="quick-btn" onclick="quickMsg('你好')">👋 打招呼</button>
-          <button class="quick-btn" onclick="quickMsg('你记得我系边个？')">🤔 身份</button>
         </div>
       </div>
     </div>
@@ -428,6 +428,23 @@
       } catch (error) {
         addMessage('assistant', '❌ 连接失败: ' + error.message + '\n\n请确保：\n1. 手机和电脑在同一 WiFi\n2. 电脑端 Menu Bar App 正在运行');
       }
+    }
+
+    // 🔄 强制切换到轮询模式
+    function forcePollingMode() {
+      console.log('🔄 用户手动切换到 HTTP 轮询模式');
+      usePolling = true;
+
+      // 关闭现有 WebSocket
+      if (ws) {
+        ws.close();
+        ws = null;
+      }
+
+      // 启动轮询
+      startPolling();
+      addMessage('assistant', '🔄 已切换到 HTTP 轮询模式\n
+现在可以通过 HTTP 与电脑版邓恩赐通信了！');
     }
 
     // 连接 WebSocket

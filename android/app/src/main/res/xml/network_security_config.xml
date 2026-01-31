@@ -2,6 +2,7 @@
 <network-security-config>
     <!-- 允许本地网络明文连接 -->
     <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">192.168.110.252</domain>
         <domain includeSubdomains="true">192.168.110.254</domain>
         <domain includeSubdomains="true">localhost</domain>
         <domain includeSubdomains="true">127.0.0.1</domain>
