@@ -336,7 +336,7 @@
     let ws = null;
     let isConnected = false;
     let isEmpty = true;
-    let usePolling = false; // 备用轮询模式
+    let usePolling = true; // ✅ 原生APP預設使用HTTP輪詢模式（更穩定）
     let pollTimer = null;
     let wsConnectAttempts = 0;
     const MAX_WS_ATTEMPTS = 3; // WebSocket 尝试次数
