@@ -4,727 +4,276 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>邓恩赐</title>
-
-  <!-- Capacitor -->
   <script src="capacitor.js"></script>
-
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'PingFang HK', 'MIui', sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'PingFang HK', sans-serif;
       background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
-
-    /* 顶部状态栏区域 */
-    .status-bar {
-      height: env(safe-area-inset-top, 44px);
-      background: rgba(0,0,0,0.1);
-    }
-
-    /* 头部 */
     .header {
-      padding: 16px;
       background: rgba(0,0,0,0.2);
+      padding: 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-    }
-
-    .agent-tabs {
-      display: flex;
-      gap: 8px;
-      padding: 8px 16px 12px;
-      background: rgba(0,0,0,0.12);
-    }
-
-    .agent-tab {
-      flex: 1;
-      padding: 8px 10px;
-      border-radius: 18px;
-      background: rgba(255,255,255,0.12);
-      color: rgba(255,255,255,0.85);
-      font-size: 12px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      cursor: pointer;
-      border: 1px solid rgba(255,255,255,0.2);
-      transition: all 0.2s ease;
-    }
-
-    .agent-tab.active {
-      background: rgba(255,255,255,0.28);
-      color: #fff;
-      border-color: rgba(255,255,255,0.45);
-    }
-
-    .agent-chip {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: rgba(0,0,0,0.2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      font-weight: 700;
-    }
-
-    .header-title {
       color: white;
-      font-size: 20px;
-      font-weight: 600;
     }
-
-    .connection-status {
+    .header h1 { font-size: 18px; }
+    .status {
       padding: 6px 12px;
-      border-radius: 20px;
+      border-radius: 12px;
       font-size: 12px;
-      font-weight: 500;
+      background: rgba(244,67,54,0.3);
+      color: #F44336;
     }
-
-    .connection-status.connected {
-      background: rgba(76, 175, 80, 0.3);
+    .status.connected {
+      background: rgba(76,175,80,0.3);
       color: #4CAF50;
     }
-
-    .connection-status.disconnected {
-      background: rgba(255, 152, 0, 0.3);
-      color: #FF9800;
-    }
-
-    /* 主内容区 */
-    .content {
+    .chat {
       flex: 1;
       overflow-y: auto;
       padding: 16px;
-      padding-bottom: calc(16px + env(safe-area-inset-bottom));
     }
-
-    .chat-messages {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
     .message {
+      margin-bottom: 12px;
       display: flex;
+      align-items: flex-start;
       gap: 8px;
     }
-
     .message.user {
       flex-direction: row-reverse;
     }
-
-    .message-avatar {
+    .avatar {
       width: 36px;
       height: 36px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #667eea, #764ba2);
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
+      font-size: 16px;
       flex-shrink: 0;
     }
-
-    .message-bubble {
+    .bubble {
       max-width: 70%;
       padding: 12px 16px;
       border-radius: 18px;
-      font-size: 15px;
+      font-size: 14px;
       line-height: 1.5;
     }
-
-    .message.assistant .message-bubble {
+    .message.assistant .bubble {
       background: white;
       color: #333;
       border-bottom-left-radius: 4px;
     }
-
-    .message.user .message-bubble {
-      background: linear-gradient(135deg, #667eea, #764ba2);
+    .message.user .bubble {
+      background: #667eea;
       color: white;
       border-bottom-right-radius: 4px;
     }
-
-    /* 输入区 */
     .input-area {
+      background: rgba(0,0,0,0.2);
       padding: 12px 16px;
-      padding-bottom: calc(12px + env(safe-area-inset-bottom));
-      background: white;
       display: flex;
       gap: 8px;
-      align-items: center;
     }
-
     .input-area input {
       flex: 1;
       padding: 12px 16px;
-      border: 2px solid #e0e0e0;
-      border-radius: 24px;
-      font-size: 15px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    .input-area input:focus {
-      border-color: #667eea;
-    }
-
-    .input-area button {
-      padding: 12px 20px;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: white;
       border: none;
       border-radius: 24px;
-      font-size: 15px;
-      font-weight: 600;
+      font-size: 14px;
+      outline: none;
+    }
+    .input-area button {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 24px;
+      background: #667eea;
+      color: white;
+      font-size: 14px;
       cursor: pointer;
     }
-
-    .input-area button:active {
-      transform: scale(0.95);
-    }
-
-    /* 加载动画 */
-    .typing {
-      display: flex;
-      gap: 4px;
-      padding: 12px 16px;
-    }
-
-    .typing span {
-      width: 8px;
-      height: 8px;
+    .input-area button:disabled {
       background: #999;
-      border-radius: 50%;
-      animation: bounce 1.4s infinite ease-in-out;
     }
-
-    .typing span:nth-child(1) { animation-delay: -0.32s; }
-    .typing span:nth-child(2) { animation-delay: -0.16s; }
-
-    @keyframes bounce {
-      0%, 80%, 100% { transform: scale(0); }
-      40% { transform: scale(1); }
+    .config {
+      padding: 12px;
+      background: rgba(0,0,0,0.3);
     }
-
-    /* 空状态 */
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 40px 20px;
-      text-align: center;
-      color: white;
-    }
-
-    .empty-state .emoji {
-      font-size: 64px;
-      margin-bottom: 16px;
-    }
-
-    .empty-state h2 {
-      font-size: 24px;
+    .config input {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
       margin-bottom: 8px;
     }
-
-    .empty-state p {
-      font-size: 14px;
-      opacity: 0.9;
-      margin-bottom: 24px;
-    }
-
-    .quick-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: center;
-    }
-
-    .quick-btn {
-      padding: 10px 16px;
-      background: rgba(255,255,255,0.2);
+    .config button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background: #4CAF50;
       color: white;
-      border: 1px solid rgba(255,255,255,0.3);
-      border-radius: 20px;
-      font-size: 13px;
-      cursor: pointer;
-    }
-
-    .quick-btn:active {
-      background: rgba(255,255,255,0.3);
+      font-size: 14px;
     }
   </style>
 </head>
 <body>
-  <!-- 状态栏占位 -->
-  <div class="status-bar"></div>
-
-  <!-- 头部 -->
   <div class="header">
-    <div class="header-title">🧚 邓恩赐</div>
-    <div class="connection-status disconnected" id="connectionStatus">
-      ⚪ 未连接
-    </div>
-    <!-- 🔍 调试信息 -->
-    <div id="debugPanel" style="font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 4px; word-break: break-all;">
-    </div>
+    <h1>💍 邓恩赐</h1>
+    <span class="status" id="status">⚪ 未连接</span>
   </div>
 
-  <!-- Agent Tabs -->
-  <div class="agent-tabs" id="agentTabs">
-    <div class="agent-tab active" data-agent="gemini">
-      <span class="agent-chip">G</span>
-      <span>Deng enci</span>
-    </div>
-    <div class="agent-tab" data-agent="claude">
-      <span class="agent-chip">C</span>
-      <span>Deng enci</span>
-    </div>
-    <div class="agent-tab" data-agent="codex">
-      <span class="agent-chip">X</span>
-      <span>Deng enci</span>
-    </div>
+  <div class="config" id="configPanel">
+    <input type="text" id="serverIp" placeholder="服务器IP" value="192.168.110.252">
+    <button onclick="saveAndConnect()">🔗 连接</button>
   </div>
 
-  <!-- 主内容 -->
-  <div class="content">
-    <div class="chat-messages" id="chatMessages">
-      <div class="empty-state">
-        <div class="emoji">👋</div>
-        <h2>你好！我系邓恩赐</h2>
-        <p>邓憬辰嘅永恒朋友伙伴<br>原生 APP 版 v1.0.8</p>
-        <div class="quick-actions">
-          <button class="quick-btn" onclick="testConnection()">🔍 测试连接</button>
-          <button class="quick-btn" onclick="forcePollingMode()">🔄 HTTP模式</button>
-          <button class="quick-btn" onclick="quickMsg('你好')">👋 打招呼</button>
-        </div>
-      </div>
-    </div>
-  </div>
+  <div class="chat" id="chat"></div>
 
-  <!-- 输入区 -->
   <div class="input-area">
-    <input type="text" id="messageInput" placeholder="同我讲嘢..." />
-    <button onclick="sendMessage()">发送</button>
+    <input type="text" id="msgInput" placeholder="同我讲嘢..." onkeypress="if(event.key==='Enter')send()">
+    <button onclick="send()" id="sendBtn">发送</button>
   </div>
 
   <script>
-    // 📱 自動檢測服務器地址
-    const hostname = window.location.hostname;
-    const serverIp = (hostname === 'localhost' || hostname === '127.0.0.1')
-      ? '192.168.110.252'  // 本地開發時使用固定 IP
-      : hostname;          // 否則使用當前主機名
+    // 配置
+    const serverIp = localStorage.getItem('dengenci_ip') || '192.168.110.252';
+    document.getElementById('serverIp').value = serverIp;
 
-    const WS_URL = `ws://${serverIp}:3001?type=mobile`;
     const API_URL = `http://${serverIp}:3001`;
-    let ws = null;
     let isConnected = false;
-    let isEmpty = true;
-    let usePolling = true; // ✅ 原生APP預設使用HTTP輪詢模式（更穩定）
     let pollTimer = null;
-    let wsConnectAttempts = 0;
-    const MAX_WS_ATTEMPTS = 3; // WebSocket 尝试次数
-    let activeAgentTab = 'gemini';
+    let lastCheck = 0;
 
-    // 🗣️ 语音合成
-    let speechSynth = window.speechSynthesis;
-    let speechEnabled = true;
-    let voices = [];
-    let cantoneseVoice = null;
+    // 页面加载时连接
+    window.onload = () => {
+      if (serverIp) {
+        connect();
+      }
+    };
 
-    // 加载语音列表
-    function loadVoices() {
-      voices = speechSynth.getVoices();
-      console.log('🔊 可用语音数量:', voices.length);
-      console.log('🔊 语音列表:', voices.map(v => v.name + ' (' + v.lang + ')').join(', '));
-
-      // 查找粤语语音
-      cantoneseVoice = voices.find(v => v.lang.includes('zh-HK') || v.lang.includes('yue'));
-      if (cantoneseVoice) {
-        console.log('✅ 找到粤语语音:', cantoneseVoice.name);
-      } else {
-        console.log('⚠️ 未找到粤语语音，使用默认中文语音');
+    // 保存并连接
+    function saveAndConnect() {
+      const ip = document.getElementById('serverIp').value.trim();
+      if (ip) {
+        localStorage.setItem('dengenci_ip', ip);
+        location.reload();
       }
     }
 
-    // 语音列表可能需要异步加载
-    loadVoices();
-    speechSynth.onvoiceschanged = loadVoices;
-
-    // 朗读文字（粤语）
-    function speak(text) {
-      if (!speechEnabled || !speechSynth) {
-        console.log('❌ TTS未启用或不可用');
-        return;
-      }
-
-      console.log('🗣️ 正在朗读:', text);
-
-      // 停止当前朗读
-      speechSynth.cancel();
-
-      const utterance = new SpeechSynthesisUtterance(text);
-
-      // 尝试使用粤语语音
-      if (cantoneseVoice) {
-        utterance.voice = cantoneseVoice;
-        utterance.lang = 'zh-HK';
-      } else {
-        // 回退到中文语音
-        const chineseVoice = voices.find(v => v.lang.startsWith('zh')) || voices[0];
-        if (chineseVoice) {
-          utterance.voice = chineseVoice;
-          utterance.lang = chineseVoice.lang;
-        }
-      }
-
-      utterance.rate = 1.0;
-      utterance.pitch = 1.0;
-      utterance.volume = 1.0;
-
-      utterance.onstart = () => console.log('🔊 开始朗读');
-      utterance.onend = () => console.log('✅ 朗读结束');
-      utterance.onerror = (e) => console.error('❌ 朗读错误:', e);
-
-      speechSynth.speak(utterance);
-    }
-
-    // 🔍 测试 HTTP 连接
-    async function testConnection() {
-      addMessage('assistant', '🔍 正在测试连接...');
+    // 连接服务器
+    async function connect() {
+      updateStatus('⏳ 连接中...', false);
 
       try {
-        const response = await fetch(API_URL + '/health');
+        // 测试HTTP连接
+        const response = await fetch(`${API_URL}/health`, { timeout: 5000 });
         const data = await response.json();
 
         if (data.status === 'ok') {
-          addMessage('assistant', '✅ HTTP 连接成功！\n桌面端: ' + (data.desktopConnected ? '已连接' : '未连接'));
+          isConnected = true;
+          updateStatus('✅ 已连接', true);
+          document.getElementById('configPanel').style.display = 'none';
 
-          // 自动启动轮询模式
-          if (!usePolling && !isConnected) {
-            usePolling = true;
-            startPolling();
-            addMessage('assistant', '🔄 已切换到轮询模式，可以开始对话了！');
-          }
-        } else {
-          addMessage('assistant', '❌ 服务器返回异常状态');
-        }
-      } catch (error) {
-        addMessage('assistant', '❌ 连接失败: ' + error.message + '\n\n请确保：\n1. 手机和电脑在同一 WiFi\n2. 电脑端 Menu Bar App 正在运行');
-      }
-    }
-
-    // 🔄 强制切换到轮询模式
-    function forcePollingMode() {
-      console.log('🔄 用户手动切换到 HTTP 轮询模式');
-      usePolling = true;
-
-      // 关闭现有 WebSocket
-      if (ws) {
-        ws.close();
-        ws = null;
-      }
-
-      // 启动轮询
-      startPolling();
-      addMessage('assistant', '🔄 已切换到 HTTP 轮询模式\n
-现在可以通过 HTTP 与电脑版邓恩赐通信了！');
-    }
-
-    // 连接 WebSocket
-    function connect() {
-      if (usePolling) {
-        console.log('🔄 使用轮询模式');
-        startPolling();
-        return;
-      }
-
-      updateConnectionStatus('connecting');
-
-      // 🔍 调试信息
-      console.log('🔍 尝试连接:', WS_URL);
-
-      ws = new WebSocket(WS_URL);
-
-      ws.onopen = () => {
-        isConnected = true;
-        wsConnectAttempts = 0; // 重置尝试次数
-        updateConnectionStatus('connected');
-        console.log('✅ 已连接到邓恩赐');
-      };
-
-      ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        handleServerMessage(data);
-      };
-
-      ws.onclose = (event) => {
-        isConnected = false;
-        updateConnectionStatus('disconnected');
-        console.log('❌ 连接断开, code:', event.code, 'reason:', event.reason);
-
-        wsConnectAttempts++;
-
-        // 如果尝试次数过多，切换到轮询模式
-        if (wsConnectAttempts >= MAX_WS_ATTEMPTS) {
-          console.log('⚠️ WebSocket 连接失败 ' + MAX_WS_ATTEMPTS + ' 次，切换到轮询模式');
-          usePolling = true;
+          // 开始轮询
           startPolling();
+
+          // 添加欢迎消息
+          addMsg('assistant', '你好！我系邓恩赐，已经准备好同你倾偈啦～');
         } else {
-          // 5秒后重连
-          setTimeout(connect, 5000);
+          updateStatus('❌ 服务器异常', false);
         }
-      };
-
-      ws.onerror = (error) => {
-        console.error('WebSocket 错误:', error);
-        console.error('URL:', WS_URL);
-      };
-    }
-
-    // 🔄 HTTP 轮询模式
-    function startPolling() {
-      usePolling = true;
-      isConnected = true;
-      updateConnectionStatus('connected');
-
-      const debugEl = document.getElementById('debugPanel');
-      debugEl.innerHTML = `🔄 轮询模式 (HTTP)`;
-
-      console.log('🔄 启动 HTTP 轮询模式');
-
-      // 开始轮询
-      pollForMessages();
-    }
-
-    // 轮询新消息
-    async function pollForMessages() {
-      if (!usePolling) return;
-
-      try {
-        const response = await fetch(API_URL + '/poll');
-        const data = await response.json();
-
-        if (data.messages && data.messages.length > 0) {
-          console.log('📨 收到 ' + data.messages.length + ' 条消息');
-          data.messages.forEach(msg => handleServerMessage(msg));
-        }
-      } catch (error) {
-        console.error('❌ 轮询失败:', error);
+      } catch (err) {
+        updateStatus('❌ 连接失败', false);
+        console.error('连接错误:', err);
       }
-
-      // 2秒后再次轮询
-      pollTimer = setTimeout(pollForMessages, 2000);
     }
 
-    // 通过 HTTP 发送消息
-    async function sendMessageViaHttp(message) {
-      try {
-        hideTyping();
-        addMessage('user', message);
-        showTyping();
+    // 开始轮询
+    function startPolling() {
+      // 每2秒检查一次消息
+      pollTimer = setInterval(async () => {
+        if (!isConnected) return;
 
-        const response = await fetch(API_URL + '/send', {
+        try {
+          const response = await fetch(`${API_URL}/poll?t=${Date.now()}`);
+          const data = await response.json();
+
+          if (data.messages && data.messages.length > 0) {
+            data.messages.forEach(msg => {
+              if (msg.type === 'desktop_chat_response') {
+                addMsg('assistant', msg.message);
+              }
+            });
+          }
+        } catch (err) {
+          console.error('轮询错误:', err);
+        }
+      }, 2000);
+    }
+
+    // 发送消息
+    async function send() {
+      const input = document.getElementById('msgInput');
+      const msg = input.value.trim();
+      if (!msg || !isConnected) return;
+
+      // 显示用户消息
+      addMsg('user', msg);
+      input.value = '';
+
+      // 发送到服务器
+      try {
+        const response = await fetch(`${API_URL}/send`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message })
+          body: JSON.stringify({ message: msg })
         });
 
-        if (response.ok) {
-          console.log('✅ 消息已发送');
-        } else {
-          console.error('❌ 发送失败:', response.status);
-          addMessage('assistant', '⚠️ 发送失败，请重试');
-          hideTyping();
+        if (!response.ok) {
+          addMsg('assistant', '⚠️ 发送失败，请重试');
         }
-      } catch (error) {
-        console.error('❌ 发送错误:', error);
-        addMessage('assistant', '⚠️ 网络错误，请检查连接');
-        hideTyping();
+      } catch (err) {
+        addMsg('assistant', '⚠️ 网络错误');
+        console.error('发送错误:', err);
       }
     }
 
-    // 更新连接状态
-    function updateConnectionStatus(status) {
-      const statusEl = document.getElementById('connectionStatus');
-      const debugEl = document.getElementById('debugPanel');
-
-      if (status === 'connected') {
-        statusEl.textContent = '✅ 已连接';
-        statusEl.className = 'connection-status connected';
-        debugEl.innerHTML = `🔗 ${WS_URL}`;
-      } else if (status === 'connecting') {
-        statusEl.textContent = '⏳ 连接中...';
-        statusEl.className = 'connection-status disconnected';
-        debugEl.innerHTML = `🔍 正在连接: ${WS_URL}`;
-      } else {
-        statusEl.textContent = '⚪ 未连接';
-        debugEl.innerHTML = `⚠️ ${WS_URL}`;
-        statusEl.className = 'connection-status disconnected';
-      }
-    }
-
-    // 处理服务器消息
-    function handleServerMessage(data) {
-      switch (data.type) {
-        case 'chat_response':
-        case 'desktop_chat_response':
-          addMessage('assistant', data.message);
-          hideTyping();
-          // 🗣️ 朗读回复
-          speak(data.message);
-          break;
-        case 'proactive_message':
-          addMessage('assistant', data.message + ' 💫');
-          // 🗣️ 朗读主动消息
-          speak(data.message);
-          break;
-        case 'desktop_connected':
-          console.log('桌面端已连接');
-          break;
-      }
-    }
-
-    // 添加消息
-    function addMessage(role, content) {
-      const messagesEl = document.getElementById('chatMessages');
-
-      if (isEmpty) {
-        messagesEl.innerHTML = '';
-        isEmpty = false;
-      }
-
-      const messageDiv = document.createElement('div');
-      messageDiv.className = `message ${role}`;
-
-      const avatar = role === 'user' ? '😊' : '🧚';
-
-      messageDiv.innerHTML = `
-        <div class="message-avatar">${avatar}</div>
-        <div class="message-bubble">${escapeHtml(content)}</div>
+    // 添加消息到聊天
+    function addMsg(role, text) {
+      const chat = document.getElementById('chat');
+      const div = document.createElement('div');
+      div.className = `message ${role}`;
+      div.innerHTML = `
+        <div class="avatar">${role === 'user' ? '👤' : '🧚'}</div>
+        <div class="bubble">${escapeHtml(text)}</div>
       `;
-
-      messagesEl.appendChild(messageDiv);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
     }
 
-    // 显示加载
-    function showTyping() {
-      const messagesEl = document.getElementById('chatMessages');
-
-      const typingDiv = document.createElement('div');
-      typingDiv.className = 'message assistant';
-      typingDiv.id = 'typingIndicator';
-      typingDiv.innerHTML = `
-        <div class="message-avatar">🧚</div>
-        <div class="message-bubble">
-          <div class="typing">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-        </div>
-      `;
-
-      messagesEl.appendChild(typingDiv);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
+    // 更新状态
+    function updateStatus(text, connected) {
+      const status = document.getElementById('status');
+      status.textContent = text;
+      status.className = 'status' + (connected ? ' connected' : '');
     }
 
-    // 隐藏加载
-    function hideTyping() {
-      const typing = document.getElementById('typingIndicator');
-      if (typing) typing.remove();
-    }
-
-    // HTML 转义
+    // HTML转义
     function escapeHtml(text) {
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
     }
-
-    // 发送消息
-    function sendMessage() {
-      const input = document.getElementById('messageInput');
-      const message = input.value.trim();
-
-      if (!message) return;
-
-      if (!isConnected) {
-        addMessage('assistant', '⚠️ 未连接到桌面，请确保电脑端 Menu Bar App 正在运行');
-        return;
-      }
-
-      // 根据模式选择发送方式
-      if (usePolling) {
-        // HTTP 轮询模式
-        sendMessageViaHttp(message);
-      } else {
-        // WebSocket 模式
-        input.value = '';
-        addMessage('user', message);
-        showTyping();
-
-        ws.send(JSON.stringify({
-          type: 'mobile_chat',
-          message: message
-        }));
-      }
-    }
-
-    // 快捷消息
-    function quickMsg(msg) {
-      document.getElementById('messageInput').value = msg;
-      sendMessage();
-    }
-
-    // Agent Tabs
-    function setActiveAgentTab(agent) {
-      activeAgentTab = agent;
-      const tabs = document.querySelectorAll('.agent-tab');
-      tabs.forEach((tab) => {
-        const isActive = tab.getAttribute('data-agent') === agent;
-        tab.classList.toggle('active', isActive);
-      });
-    }
-
-    function initAgentTabs() {
-      const tabs = document.querySelectorAll('.agent-tab');
-      tabs.forEach((tab) => {
-        tab.addEventListener('click', () => {
-          const agent = tab.getAttribute('data-agent') || 'gemini';
-          setActiveAgentTab(agent);
-        });
-      });
-      setActiveAgentTab(activeAgentTab);
-    }
-
-    // 回车发送
-    document.getElementById('messageInput').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') sendMessage();
-    });
-
-    // 启动连接
-    initAgentTabs();
-    connect();
-
-    console.log('🧚 邓恩赐原生 APP v1.0 已启动');
   </script>
 </body>
 </html>
